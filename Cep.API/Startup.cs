@@ -1,3 +1,9 @@
+using Cep.Application.Services;
+using Cep.Application.Services.Interfaces;
+using Cep.Infra.Data;
+using Cep.Infra.Repositories;
+using Cep.Infra.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 public class Startup
@@ -27,13 +33,19 @@ public class Startup
             });
         });
 
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseInMemoryDatabase("CepDb"));
+
+        services.AddScoped<ICepRepository, CepRepository>();
+        services.AddScoped<ICepService, CepService>();
+        services.AddHttpClient();
+
     }
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
 
         if (env.IsDevelopment())
         {
-
             app.UseDeveloperExceptionPage();
             app.UseSwagger();
             app.UseSwaggerUI(options =>
