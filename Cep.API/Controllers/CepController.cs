@@ -16,15 +16,8 @@ public class CepController : ControllerBase
     [HttpPost("post-cep")]
     public async Task<IActionResult> PostCep([FromBody] CepRequestDto request)
     {
-        try
-        {
-            var cep = await _cepService.CreateCepAsync(request.Cep);
-            return CreatedAtAction(nameof(PostCep), new { cep = cep.Cep }, cep);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await _cepService.CreateCepAsync(request.Cep);
+        return CreatedAtAction(nameof(PostCep), new { cep = result.Cep }, result);
     }
 
     [HttpGet("get-cep/{cep}")]
