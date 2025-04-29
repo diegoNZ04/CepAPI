@@ -1,3 +1,4 @@
+using Cep.Application.Mappings;
 using Cep.Application.Services;
 using Cep.Application.Services.Interfaces;
 using Cep.Infra.Data;
@@ -32,6 +33,8 @@ public class Startup
                 },
             });
         });
+
+        services.AddAutoMapper(typeof(CepProfile));
 
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase("CepDb"));
