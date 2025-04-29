@@ -1,0 +1,22 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY Cep.Domain/Cep.Domain.csproj Cep.Domain/
+COPY Cep.Application/Cep.Application.csproj Cep.Application/
+COPY Cep.Infra/Cep.Infra.csproj Cep.Infra/
+COPY Cep.API/Cep.API.csproj Cep.API/
+
+RUN dotnet restore Cep.API/Cep.API.csproj
+
+COPY . .
+WORKDIR /src/Cep.API
+RUN dotnet publish -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+
+EXPOSE 5019
+
+# Iniciar aplicação
+ENTRYPOINT ["dotnet", "Cep.API.dll"]
