@@ -28,7 +28,7 @@ public class Startup
         services.AddValidatorsFromAssemblyContaining<CepRequestValidator>();
 
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseInMemoryDatabase("CepDb"));
+            options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
 
         AddSwaggerConfiguration(services);
         AddHttpClients(services);
