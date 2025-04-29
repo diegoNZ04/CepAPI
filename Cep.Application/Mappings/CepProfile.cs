@@ -1,6 +1,5 @@
 using AutoMapper;
 using Cep.Application.DTOs;
-using Cep.Application.DTOs.Requests;
 using Cep.Application.DTOs.Responses;
 using Cep.Domain.Models;
 
