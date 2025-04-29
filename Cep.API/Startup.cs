@@ -1,24 +1,43 @@
+using Cep.API.Middlewares;
 using Cep.Application.Mappings;
 using Cep.Application.Services;
 using Cep.Application.Services.Interfaces;
+using Cep.Application.Validators;
 using Cep.Infra.Data;
 using Cep.Infra.Repositories;
 using Cep.Infra.Repositories.Interfaces;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 public class Startup
 {
+    public IConfiguration Configuration { get; }
     public Startup(IConfiguration configuration)
     {
         Configuration = configuration;
     }
-    public IConfiguration Configuration { get; }
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddControllers();
-
         services.AddEndpointsApiExplorer();
+        services.AddAutoMapper(typeof(CepProfile));
+        services.AddFluentValidationAutoValidation();
+        services.AddValidatorsFromAssemblyContaining<CepRequestValidator>();
+
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseInMemoryDatabase("CepDb"));
+
+        AddSwaggerConfiguration(services);
+        AddHttpClients(services);
+        AddDependencyInjection(services);
+
+    }
+
+    private void AddSwaggerConfiguration(IServiceCollection services)
+    {
         services.AddSwaggerGen(options =>
         {
             options.SwaggerDoc("v1", new OpenApiInfo
@@ -33,19 +52,22 @@ public class Startup
                 },
             });
         });
+    }
 
-        services.AddAutoMapper(typeof(CepProfile));
+    private void AddHttpClients(IServiceCollection services)
+    {
+        services.AddHttpClient<IViaCepService, ViaCepService>();
+    }
 
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseInMemoryDatabase("CepDb"));
-
+    private void AddDependencyInjection(IServiceCollection services)
+    {
         services.AddScoped<ICepRepository, CepRepository>();
         services.AddScoped<ICepService, CepService>();
-        services.AddHttpClient();
-
     }
+
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
+        app.UseMiddleware<ExceptionMiddleware>();
 
         if (env.IsDevelopment())
         {
@@ -60,7 +82,6 @@ public class Startup
 
         app.UseHttpsRedirection();
         app.UseRouting();
-
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();

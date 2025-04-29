@@ -1,7 +1,6 @@
-using System.Text.Json;
 using AutoMapper;
-using Cep.Application.DTOs;
 using Cep.Application.DTOs.Responses;
+using Cep.Application.Exceptions;
 using Cep.Application.Services.Interfaces;
 using Cep.Domain.Models;
 using Cep.Infra.Repositories.Interfaces;
@@ -11,13 +10,13 @@ namespace Cep.Application.Services;
 public class CepService : ICepService
 {
     private readonly ICepRepository _cepRepository;
-    private readonly HttpClient _httpClient;
+    private readonly IViaCepService _viaCepService;
     private readonly IMapper _mapper;
 
-    public CepService(ICepRepository cepRepository, HttpClient httpClient, IMapper mapper)
+    public CepService(ICepRepository cepRepository, IViaCepService viaCepService, IMapper mapper)
     {
         _cepRepository = cepRepository;
-        _httpClient = httpClient;
+        _viaCepService = viaCepService;
         _mapper = mapper;
     }
 
@@ -28,10 +27,10 @@ public class CepService : ICepService
         if (existingCep != null)
             return _mapper.Map<CepResponseDto>(existingCep);
 
-        var viaCepDto = await FetchCepFromViaCepAsync(cep);
+        var viaCepDto = await _viaCepService.FetchCepAsync(cep);
 
         if (viaCepDto == null)
-            throw new Exception("Cep não encontrado no serviço externo.");
+            throw new NotFoundException("Cep não encontrado no serviço externo.");
 
         var newCep = _mapper.Map<CepModel>(viaCepDto);
 
@@ -45,25 +44,8 @@ public class CepService : ICepService
         var cepModel = await _cepRepository.GetByCepAsync(cep);
 
         if (cepModel == null)
-            throw new Exception("Cep não encontrado.");
+            throw new NotFoundException("Cep não encontrado.");
 
         return _mapper.Map<CepResponseDto>(cepModel);
-    }
-
-    private async Task<ViaCepDto> FetchCepFromViaCepAsync(string cep)
-    {
-        var response = await _httpClient.GetAsync($"https://viacep.com.br/ws/{cep}/json/");
-
-        if (!response.IsSuccessStatusCode)
-            throw new Exception("Erro ao consultar a ViaCEP API.");
-
-
-        var content = await response.Content.ReadAsStringAsync();
-        var viaCep = JsonSerializer.Deserialize<ViaCepDto>(content);
-
-        if (viaCep == null || viaCep.Cep == null)
-            throw new Exception("Erro ao desserializar a resposta da ViaCEP API.");
-
-        return viaCep;
     }
 }
