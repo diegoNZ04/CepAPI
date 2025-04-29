@@ -1,3 +1,4 @@
+using System.Reflection;
 using Cep.API.Middlewares;
 using Cep.Application.Mappings;
 using Cep.Application.Services;
@@ -51,6 +52,8 @@ public class Startup
                     Email = "diegoamorim03152004@gmail.com"
                 },
             });
+            var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
         });
     }
 
